@@ -1,0 +1,82 @@
+<link rel="import" href="../polymer/polymer.html" />
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+<link rel="import" href="../t-shared-lib/t-provider-behavior.html">
+<!--
+    <h3>Details:</h3>
+
+        `t-itinerary-list-api` fetches itinerary list.
+
+    <h3>Events:</h3>
+
+        following events are fired by this component
+
+            1. 't-itinerary-list-api-success' - fired upon successful search call
+            2. 't-itinerary-list-api-error' - fired if search call is failed
+
+    <h3>Example:</h3>
+
+        <t-itinerary-list-api 
+            id="searchApi" 
+            loading={{loading}} 
+            api-base-url="{{apiBaseUrl}}" 
+            api-relative-url="api/Car/search" 
+            auth-token="{{authToken}}"
+            on-t-itinerary-list-api-success="onSearchSuccess"
+            on-t-itinerary-list-api-error="onSearchError">
+        </t-itinerary-list-api>
+
+    @demo demo/index.html
+-->
+<dom-module id="t-itinerary-list-api">
+    <template>
+        <iron-ajax id="ajaxCall" method="GET" content-type="application/json" handle-as="json" verbose>
+        </iron-ajax>
+    </template>
+</dom-module>
+<script>
+(function() {
+
+    Polymer({
+        is: 't-itinerary-list-api',
+
+        /*
+         * <p>Behaviour to validate ajax parameters and handle error codes.</p>
+         */
+        behaviors: [TravelNxt.Behaviors.ProviderBehavior],
+
+        listeners: {
+            'ajaxCall.response': '_successCallback',
+            'ajaxCall.error': '_errorCallback'
+        },
+
+        /*
+         * <p>Method get list from api</p>
+         */
+        get: function(request) {
+            if (this._validateApiMeta()) {
+                this.$.ajaxCall.url = this._getUrl();
+                if (request) {
+                    this.$.ajaxCall.body = JSON.stringify(request);
+                }
+                this._setLoading(true);
+                this.$.ajaxCall.generateRequest();
+            }
+        },
+
+        /*
+         * <p>Success callback</p>
+         */
+        _successCallback: function(event) {
+            this._successHandler(event);
+        },
+
+        /*
+         * <p>error callback</p>
+         */
+        _errorCallback: function(event) {
+            this._errorHandler(event);
+        }
+
+    });
+})();
+</script>

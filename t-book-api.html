@@ -1,0 +1,189 @@
+<link rel="import" href="../polymer/polymer.html" />
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+<link rel="import" href="../t-shared-lib/t-provider-behavior.html">
+<!--
+    <h3>Details:</h3>
+
+        `t-book-api` is a car book api component integrated with mystique apis.
+
+        It fires mystique book call and returns `bookId` upon successful opearion
+
+    <h3>Object Structure:</h3>
+
+        1. This component uses following request format to book cars -
+
+            {
+                itinerary: itinerary,
+                passengerInfo: passengerInfo,
+                payment: payment
+            }
+
+    <h3>Events:</h3>
+
+        following events are fired by this component
+
+            1. 't-book-api-success' - fired upon successful book call
+            2. 't-book-api-error' - fired if book call is failed
+
+    <h3>Example:</h3>
+
+        <t-book-api
+            id="bookApi" 
+            loading={{loading}} 
+            api-base-url="[[apiBaseUrl]]" 
+            api-relative-url="api/ShoppingCart/book" 
+            auth-token="[[authToken]]"
+            on-t-book-api-success="_onBookSuccess"
+            on-t-book-api-error="_onBookError">
+        </t-book-api>
+
+    @demo demo/index.html
+-->
+<dom-module id="t-book-api">
+    <template>
+        <iron-ajax id="ajaxCall" method="POST" content-type="application/json" handle-as="json" verbose>
+        </iron-ajax>
+    </template>
+</dom-module>
+<script>
+    (function() {
+
+        'use strict'
+
+        Polymer({
+            is: 't-book-api',
+
+            /*
+             * <p>Behaviour to validate ajax parameters and handle error codes.</p>
+             */
+            behaviors: [TravelNxt.Behaviors.ProviderBehavior],
+
+            listeners: {
+                'ajaxCall.response': '_successCallback',
+                'ajaxCall.error': '_errorCallback'
+            },
+
+            properties: {
+
+                /*
+                 * <p>Mystique API resuest object</p>
+                 */
+                request : {
+                    type: Object
+                }
+            },
+
+            /*
+             * <p>Method to book cars</p>
+             */
+            book: function(request) {
+
+                if (!request) {
+                    throw Error("book request is mandetory");
+                }
+
+                if (this._validateApiMeta()) {                
+                    this.$.ajaxCall.url = this._getUrl();
+                    this.$.ajaxCall.body = JSON.stringify(request);
+                    this.$.ajaxCall.generateRequest();
+                }
+            },
+
+            /*
+             * <p>Translator</p>
+             */
+            _buildBookingRequest: function(data) {
+
+                this._getPassengers(data.passengerInfo);
+
+                this._getPaymentInfo(data.payment);
+
+                this._getPaymentBreakup(data.itinerary.fare.components, data.itinerary.isPostPaid);
+            },
+
+            /*
+             * <p>Build passenger data</p>
+             */
+            _getPassengers: function (passengerInfo) {
+
+                if (!passengerInfo || !passengerInfo.passengerList) {
+                    return;    
+                }
+
+                for (var i = 0; i < passengerInfo.passengerList.length; i++) {
+                    this.request.inventoriesInfo[0].passengerIds.push(i);
+
+                    var passenger = passengerInfo.passengerList[i];
+
+                    this.request.passengers.push({
+                        firstName: passenger.firstName,
+                        lastName: passenger.lastName,
+                        title: passenger.title,
+                        phoneNumber: passengerInfo.phone,
+                        dateOfBirth: { 
+                            date: "Tue, 04 Sep,1990",
+                            time: "12:46 PM"
+                        },
+                        emailAddress: passengerInfo.email,
+                        id: i,
+                        type: passenger.type,
+                        gender: passenger.genderString
+                    });
+                }
+            },
+
+            /*
+             * <p>Build payment data</p>
+             */
+            _getPaymentInfo: function (payment, isPostPaid) {
+
+                this.request.inventoriesInfo[0].paymentIds.push(0);
+
+                if (isPostPaid) {
+                    this.request.payments.push({
+                        type: "PostPaid",
+                        id: 0
+                    });
+                } else{                    
+                    this.request.payments.push(payment);
+                    payment.id = 0;
+                }
+
+            },
+
+            /*
+             * <p>Build payment breakup data</p>
+             */
+            _getPaymentBreakup: function (components, isPostPaid) {
+              var totalFare = components.find(function (component, index, array) {
+                        return component.type.toLowerCase() == 'totalfare';
+                    });
+
+              if (totalFare) {
+                  this.request.inventoriesInfo[0].paymentBreakups.push({
+                      "amount": totalFare.money,
+                      "paymentId": 0,
+                      "paymentType": isPostPaid ? 'PostPaid' : "creditCard",
+                      "passengerId": null
+                  });
+              }
+            },
+
+            /*
+             * <p>Success callback</p>
+             */
+            _successCallback: function(event) {
+                this._successHandler(event);
+            },
+
+
+            /*
+             * <p>error callback</p>
+             */
+            _errorCallback: function(event) {
+                this._errorHandler(event);
+            }
+
+        });
+    })();
+</script>

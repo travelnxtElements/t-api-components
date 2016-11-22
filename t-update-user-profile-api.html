@@ -1,0 +1,153 @@
+<link rel="import" href="../polymer/polymer.html" />
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+<link rel="import" href="../t-shared-lib/t-provider-behavior.html">
+<!--
+    <h3>Details:</h3>
+
+        `t-update-user-profile-api` updates the user profile secion wise.        
+
+    <h3>Object Structure:</h3>
+
+        1. This component uses following request format to search cars -
+
+            var request = {  
+               "Sections":[  
+                  "BasicInfo"
+               ],
+               "User":{  
+                  "id":5742,
+                  "basicInfo":{  
+                     "userName":"johndoe@tavisca.com",
+                     "name":{  
+                        "title":"Mr",
+                        "firstName":"John",
+                        "middleName":"",
+                        "lastName":"Doe",
+                        "suffix":"",
+                        "prefix":""
+                     },
+                     "dateOfBirth":{  
+                        "date":"Tue, 06 Feb, 1990",
+                        "time":"12:00 AM",
+                        "systemDateTime":"1990-02-06T00:00:00"
+                     },
+                     "role":"Traveller",
+                     "gender":"NotSpecified",
+                     "profileImage":"",
+                     "redressInfo":"",
+                     "origin":"Unknown",
+                     "createdDate":{  
+                        "date":"Fri, 03 Jul, 2015",
+                        "time":"4:25 AM",
+                        "systemDateTime":"2015-07-03T04:25:08.833"
+                     },
+                     "roles":null
+                  },
+                  "addresses":[  
+
+                  ],
+                  "contacts":{  
+                     "phones":[  
+
+                     ],
+                     "emails":[  
+                        {  
+                           "id":"1",
+                           "value":"johndoe@tavisca.com",
+                           "isPrimary":true
+                        }
+                     ]
+                  },
+                  "fellowTravellers":null,
+                  "passports":null,
+                  "memberships":null,
+                  "userIdentity":{  
+                     "secretQuestion":""
+                  },
+                  "referralInfo":null,
+                  "wallet":null,
+                  "referralCode":"johndoe@tavisca.com",
+                  "additionalData":[  
+
+                  ]
+               }
+            }
+
+    <h3>Events:</h3>
+
+        following events are fired by this component
+
+            1. 't-update-user-profile-api-success' - fired upon successful search call
+            2. 't-update-user-profile-api-error' - fired if search call is failed
+
+    <h3>Example:</h3>
+
+        <t-update-user-profile-api 
+            id="searchApi" 
+            loading={{loading}} 
+            api-base-url="{{apiBaseUrl}}" 
+            api-relative-url="api/user/update/{userid}" 
+            auth-token="{{authToken}}"
+            on-t-update-user-profile-api-success="onSearchSuccess"
+            on-t-update-user-profile-api-error="onSearchError">
+        </t-update-user-profile-api>
+
+    @demo demo/index.html
+-->
+<dom-module id="t-update-user-profile-api">
+    <template>
+        <iron-ajax id="ajaxCall" method="POST" content-type="application/json" handle-as="json" verbose>
+        </iron-ajax>
+    </template>
+</dom-module>
+<script>
+(function() {
+
+    Polymer({
+        is: 't-update-user-profile-api',
+
+        /*
+         * <p>Behaviour to validate ajax parameters and handle error codes.</p>
+         */
+        behaviors: [TravelNxt.Behaviors.ProviderBehavior],
+
+        listeners: {
+            'ajaxCall.response': '_successCallback',
+            'ajaxCall.error': '_errorCallback'
+        },
+
+        /*
+         * <p>Method add item to cart</p>
+         */
+        update: function(request) {
+
+            if (!request) {
+                throw Error('invalid request!');
+                return;
+            }
+
+            if (this._validateApiMeta()) {
+                this.$.ajaxCall.url = this._getUrl();
+                this.$.ajaxCall.body = JSON.stringify(request);
+                this.$.ajaxCall.generateRequest();
+            }
+        },
+
+        /*
+         * <p>Success callback</p>
+         */
+        _successCallback: function(event) {
+            this._successHandler(event);
+        },
+
+
+        /*
+         * <p>error callback</p>
+         */
+        _errorCallback: function(event) {
+            this._errorHandler(event);
+        }
+
+    });
+})();
+</script>
